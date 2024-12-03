@@ -2,15 +2,15 @@ import streamlit as st
 from datetime import date
 import firebase_admin
 from firebase_admin import credentials, firestore
+import time
 
 # Initialize Firebase Admin
 if not firebase_admin._apps:
     cred = credentials.Certificate(
-        'task-management-869ee-firebase-adminsdk-e8q8e-df9f659f80.json')  # Update with the correct path
+        'task-management-3ecb3-firebase-adminsdk-9phle-be91d76a21.json')  # Update with the correct path
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://task-management-869ee-default-rtdb.asia-southeast1.firebasedatabase.app/'})
+        'databaseURL': 'https://task-management-3ecb3-default-rtdb.asia-southeast1.firebasedatabase.app/'} )
 db = firestore.client()
-
 
 # Signup Page
 def signup_page():
@@ -48,7 +48,6 @@ def signup_page():
 
 # Login Page
 def login_page():
-    # Check if the user is already logged in
     if st.session_state.get('logged_in', False):
         st.session_state.page = 'task_management'  # Set the page to task management
         return
@@ -81,7 +80,7 @@ def login_page():
                 st.session_state.logged_in = True
                 st.session_state.username = email  # Store username for task management
                 st.session_state.page = 'task_management'  # Update page to task management
-                st.experimental_rerun()  # Trigger rerun to reload and show task management page
+                time.sleep(0.5)  # Brief pause to allow updates
             else:
                 st.error("Invalid email or password!")
         except Exception as e:
@@ -141,7 +140,6 @@ def task_management_page():
         unsafe_allow_html=True
     )
 
-    # Retrieve tasks for the logged-in user
     tasks_ref = db.collection('tasks').document(st.session_state.username).collection('user_tasks')
     tasks = tasks_ref.stream()
     tasks_list = []
@@ -150,7 +148,6 @@ def task_management_page():
         task_data = task.to_dict()
         tasks_list.append(task_data)
 
-    # Task Form
     task_name = st.text_input("Task Name", key="task_name_input")
     task_deadline_date = st.date_input("Task Deadline Date", min_value=date.today(), key="task_deadline_date_input")
     task_priority = st.selectbox("Priority", ["High", "Medium", "Low"], key="task_priority_input")
@@ -162,17 +159,8 @@ def task_management_page():
         tasks_ref.add(new_task)
         st.success("Task added successfully.")
 
-    # Display Tasks
     for index, task in enumerate(tasks_list):
-        task_name = task["Task Name"]
-        task_deadline = task["Task Deadline Date"]
-        task_priority = task["Priority"]
-        task_category = task["Category"]
-
-        st.write(f"Task {index + 1}: {task_name} | {task_deadline} | {task_priority} | {task_category}")
-
-    # Task Editing and Deleting (not implemented here but can be added similarly)
-    # You can add buttons to delete or edit tasks as needed.
+        st.write(f"Task {index + 1}: {task['Task Name']} | {task['Task Deadline Date']} | {task['Priority']} | {task['Category']}")
 
 
 # Initialize session state
